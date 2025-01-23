@@ -10,14 +10,15 @@ on:
 jobs:
   cargo-deny:
     strategy:
-      matrix: >-
-        ${{
-          fromJSON(
-            github.event_name == 'schedule'
-              && '{"ref":["main","release","release-proxy","release-compute"]}'
-              || format('{{"ref":["{0}"]}}', github.sha)
-          )
-        }}
+      matrix:
+        ref: >-
+          ${{
+            fromJSON(
+              github.event_name == 'schedule'
+                && '["main","release","release-proxy","release-compute"]'
+                || format('["{0}"]', github.sha)
+            )
+          }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
