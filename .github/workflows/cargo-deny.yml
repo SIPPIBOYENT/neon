@@ -27,7 +27,7 @@ jobs:
           ref: ${{ matrix.ref }}
 
       - name: Check rust licenses/bans/advisories/sources
-        run: cargo deny check --hide-inclusion-graph
+        run: cargo deny check --hide-inclusion-graph ${{ github.event_name == 'schedule' && 'advisories' || 'all' }}
 
       - name: Post to a Slack channel
         if: ${{ github.event_name == 'schedule' && failure() }}
