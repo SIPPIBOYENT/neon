@@ -45,6 +45,27 @@ jobs:
             run cancel-previous-in-concurrency-group.yml \
               --field concurrency_group="${{ env.E2E_CONCURRENCY_GROUP }}"
 
+  files-changed:
+    needs: [ check-permissions ]
+    name: Detect what files changed
+    runs-on: ubuntu-22.04
+    timeout-minutes: 3
+    outputs:
+      check-rust-dependencies: ${{ steps.files-changed.outputs.rust_dependencies }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Check for Postgres changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36  # v3.0.2
+        id: files-changed
+        with:
+          token: ${{ github.token }}
+          filters: .github/file-filters.yaml
+
   tag:
     needs: [ check-permissions ]
     runs-on: [ self-hosted, small ]
@@ -168,6 +189,12 @@ jobs:
     with:
       build-tools-image: ${{ needs.build-build-tools-image.outputs.image }}-bookworm
       archs: '["x64", "arm64"]'
+    secrets: inherit
+
+  check-dependencies-rust:
+    needs: [ check-permissions, files-changed, build-build-tools-image ]
+    if: ${{ needs.files-changed.outputs.check-rust-dependencies == 'true' }}
+    uses: ./.github/workflows/cargo-deny.yml
     secrets: inherit
 
   build-and-test-locally:
@@ -1275,6 +1302,7 @@ jobs:
       - build-and-test-locally
       - check-codestyle-python
       - check-codestyle-rust
+      - check-dependencies-rust
       - promote-images-dev
       - test-images
       - trigger-custom-extensions-build-and-wait
