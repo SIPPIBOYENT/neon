@@ -195,6 +195,8 @@ jobs:
     needs: [ check-permissions, files-changed, build-build-tools-image ]
     if: ${{ needs.files-changed.outputs.check-rust-dependencies == 'true' }}
     uses: ./.github/workflows/cargo-deny.yml
+    with:
+      build-tools-image: ${{ needs.build-build-tools-image.outputs.image }}-bookworm
     secrets: inherit
 
   build-and-test-locally:

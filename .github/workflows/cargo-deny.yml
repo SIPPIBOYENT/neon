@@ -2,6 +2,10 @@ name: cargo deny checks
 
 on:
   workflow_call:
+    inputs:
+      build-tools-image:
+        required: false
+        type: string
   schedule:
     - cron: '0 0 * * *'
 
@@ -17,7 +21,16 @@ jobs:
                 || format('["{0}"]', github.sha)
             )
           }}
-    runs-on: ubuntu-22.04
+
+    runs-on: [self-hosted, small]
+
+    container:
+      image: ${{ inputs.build-tools-image || 'neondatabase/build-tools:pinned' }}
+      credentials:
+        username: ${{ secrets.NEON_DOCKERHUB_USERNAME }}
+        password: ${{ secrets.NEON_DOCKERHUB_PASSWORD }}
+      options: --init
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
